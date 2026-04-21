@@ -49,7 +49,7 @@ Integrates EcoFlow devices into Home Assistant via the official EcoFlow IoT API 
 
 1. Go to the EcoFlow Developer Portal for your region:
    - **Europe:** [https://developer-eu.ecoflow.com](https://developer-eu.ecoflow.com)
-   - **Americas / Rest of World:** [https://developer.ecoflow.com/us/](https://developer.ecoflow.com/us/)
+   - **Americas / Others:** [https://developer.ecoflow.com/us/](https://developer.ecoflow.com/us/)
 2. Log in with your EcoFlow account.
 3. Navigate to **Developer Platform** → Create an application.
 4. Copy your **Access Key** and **Secret Key**.

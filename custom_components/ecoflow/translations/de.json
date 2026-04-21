@@ -3,7 +3,7 @@
     "step": {
       "user": {
         "title": "EcoFlow verbinden",
-        "description": "Gib deine EcoFlow-Entwickler-API-Zugangsdaten ein. Wähle Europa, wenn du in der EU/UK bist, oder Amerika für Nordamerika. \n- Europa: {portal_eu}\n- Amerika: {portal_us}",
+        "description": "Gib deine EcoFlow-Entwickler-API-Zugangsdaten ein. Wähle Europa für EU/UK oder Amerika / Andere für den Rest der Welt. Nutze 'Custom', falls du eine spezifische API-URL für andere Regionen eingeben musst.\n- Europa: {portal_eu}\n- Amerika / Andere: {portal_us}",
         "data": {
           "access_key": "Access Key",
           "secret_key": "Secret Key",
@@ -12,9 +12,9 @@
       },
       "custom_host": {
         "title": "Benutzerdefinierter API-Host",
-        "description": "Gib die manuelle API-URL ein. Diese findest du im EcoFlow-Entwicklerportal unter 'Document -> General'.",
+        "description": "Gib die manuelle API-URL ein. Nutze dies, falls EcoFlow neue regionale Endpunkte eingeführt hat, die hier noch nicht gelistet sind. Diese findest du im EcoFlow-Entwicklerportal unter Document -> General.",
         "data": {
-          "api_host": "API Host URL"
+          "api_host": "API-Host-URL"
         }
       }
     },

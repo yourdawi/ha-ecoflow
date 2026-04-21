@@ -3,7 +3,7 @@
     "step": {
       "user": {
         "title": "Connect to EcoFlow",
-        "description": "Enter your EcoFlow developer API credentials. Select Europe if you are in the EU/UK, or Americas for North America. \n- Europe: {portal_eu}\n- Americas: {portal_us}",
+        "description": "Enter your EcoFlow developer API credentials. Select Europe if you are in the EU/UK, or Americas / Others for the rest of the world. Use 'Custom' if you need to specify a different API host for other regions.\n- Europe: {portal_eu}\n- Americas / Others: {portal_us}",
         "data": {
           "access_key": "Access Key",
           "secret_key": "Secret Key",
@@ -12,7 +12,7 @@
       },
       "custom_host": {
         "title": "Custom API Host",
-        "description": "Enter the custom API host URL. You can find this in the EcoFlow developer portal under Document -> General.",
+        "description": "Enter the custom API host URL. Use this if EcoFlow has introduced a new regional endpoint not listed yet. You can find this in the EcoFlow developer portal under Document -> General.",
         "data": {
           "api_host": "API Host URL"
         }

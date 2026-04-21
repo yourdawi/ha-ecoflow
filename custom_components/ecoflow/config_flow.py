@@ -33,8 +33,8 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
         vol.Required(CONF_REGION, default=API_REGION_EU): vol.In(
             {
                 API_REGION_EU: "Europe (api-e)",
-                API_REGION_US: "Americas (api-a)",
-                API_REGION_CUSTOM: "Custom / Other",
+                API_REGION_US: "Americas / Others (api-a)",
+                API_REGION_CUSTOM: "Custom",
             }
         ),
     }
