@@ -18,6 +18,7 @@ Integrates EcoFlow devices into Home Assistant via the official EcoFlow IoT API 
 ## Installation
 
 ### HACS (recommended)
+[![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=yourdawi&repository=ha-ecoflow&category=integration)
 1. In HACS, go to **Integrations** → ⋮ → **Custom repositories**
 2. Add this repository URL: `https://github.com/yourdawi/ha-ecoflow` with category **Integration**
 3. Search for **EcoFlow** and install
