@@ -1,0 +1,30 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Connect to EcoFlow",
+        "description": "Enter your EcoFlow developer API credentials. Select Europe if you are in the EU/UK, or Americas for North America. \n- Europe: {portal_eu}\n- Americas: {portal_us}",
+        "data": {
+          "access_key": "Access Key",
+          "secret_key": "Secret Key",
+          "region": "Region"
+        }
+      },
+      "custom_host": {
+        "title": "Custom API Host",
+        "description": "Enter the custom API host URL. You can find this in the EcoFlow developer portal under Document -> General.",
+        "data": {
+          "api_host": "API Host URL"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Cannot connect to EcoFlow API. Please check your internet connection.",
+      "invalid_auth": "Invalid Access Key or Secret Key. Please check your credentials.",
+      "unknown": "Unexpected error. Please check the logs for details."
+    },
+    "abort": {
+      "already_configured": "This EcoFlow account is already configured."
+    }
+  }
+}
