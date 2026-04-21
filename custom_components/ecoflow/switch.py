@@ -53,7 +53,7 @@ class EcoFlowSwitchEntity(EcoFlowEntity, SwitchEntity):
         quota_key: str,
         name: str,
         icon: str | None,
-        set_fn: Callable[[bool], dict],
+        set_fn: Callable[[bool, str], dict],
     ) -> None:
         super().__init__(coordinator, device_type)
         self._quota_key = quota_key
@@ -78,9 +78,9 @@ class EcoFlowSwitchEntity(EcoFlowEntity, SwitchEntity):
             return str(raw).lower() in ("true", "1", "on")
 
     async def async_turn_on(self, **kwargs: Any) -> None:
-        params = self._set_fn(True)
+        params = self._set_fn(True, self.coordinator.sn)
         await self.coordinator.async_send_command(params)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
-        params = self._set_fn(False)
+        params = self._set_fn(False, self.coordinator.sn)
         await self.coordinator.async_send_command(params)

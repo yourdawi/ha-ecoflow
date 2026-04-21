@@ -61,7 +61,7 @@ class EcoFlowNumberEntity(EcoFlowEntity, NumberEntity):
         max_val: float,
         step: float,
         icon: str | None,
-        set_fn: Callable[[int], dict],
+        set_fn: Callable[[int, str], dict],
     ) -> None:
         super().__init__(coordinator, device_type)
         self._quota_key = quota_key
@@ -88,5 +88,5 @@ class EcoFlowNumberEntity(EcoFlowEntity, NumberEntity):
             return None
 
     async def async_set_native_value(self, value: float) -> None:
-        params = self._set_fn(int(value))
+        params = self._set_fn(int(value), self.coordinator.sn)
         await self.coordinator.async_send_command(params)

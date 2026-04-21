@@ -20,13 +20,17 @@ def _build_sign(params: dict, access_key: str, secret_key: str) -> tuple[str, st
     nonce = str(random.randint(100000, 999999))
     timestamp = str(int(time.time() * 1000))
 
-    # All parameters (including auth fields) must be flattened and sorted together
+    # 1. Flatten device parameters
     flat: list[str] = []
     _flatten(params, "", flat)
+
+    # 2. Sort device parameters alphabetically
+    flat.sort()
+
+    # 3. Append common authentication parameters at the end
     flat.append(f"accessKey={access_key}")
     flat.append(f"nonce={nonce}")
     flat.append(f"timestamp={timestamp}")
-    flat.sort()
 
     query_str = "&".join(flat)
 
@@ -63,14 +67,16 @@ def _flatten(obj: Any, prefix: str, result: list[str]) -> None:
         result.append(f"{prefix}={val}")
 
 
-def _headers(access_key: str, nonce: str, timestamp: str, sign: str) -> dict:
-    return {
+def _headers(access_key: str, nonce: str, timestamp: str, sign: str, content_type: str | None = None) -> dict:
+    headers = {
         "accessKey": access_key,
         "nonce": nonce,
         "timestamp": timestamp,
         "sign": sign,
-        "Content-Type": "application/json;charset=UTF-8",
     }
+    if content_type:
+        headers["Content-Type"] = content_type
+    return headers
 
 
 class EcoFlowApiError(Exception):
@@ -103,33 +109,33 @@ class EcoFlowApiClient:
             resp.raise_for_status()
             data = await resp.json()
         if data.get("code") != "0":
-            raise EcoFlowApiError(f"API error: {data.get('message', data)}")
+            raise EcoFlowApiError(f"API error for {path} (query: {params}): {data.get('message', data)}")
         return data
 
     # ── POST requests (JSON body) ─────────────────────────────────────────────
 
     async def _post(self, path: str, body: dict) -> dict:
         nonce, timestamp, sign, _ = _build_sign(body, self._access_key, self._secret_key)
-        headers = _headers(self._access_key, nonce, timestamp, sign)
+        headers = _headers(self._access_key, nonce, timestamp, sign, "application/json;charset=UTF-8")
         url = self._base + path
         async with self._session.post(url, json=body, headers=headers) as resp:
             resp.raise_for_status()
             data = await resp.json()
         if data.get("code") != "0":
-            raise EcoFlowApiError(f"API error: {data.get('message', data)}")
+            raise EcoFlowApiError(f"API error for {path} (DEBUG_BODY: {body}): {data.get('message', data)}")
         return data
 
     # ── PUT requests (JSON body) ──────────────────────────────────────────────
 
     async def _put(self, path: str, body: dict) -> dict:
         nonce, timestamp, sign, _ = _build_sign(body, self._access_key, self._secret_key)
-        headers = _headers(self._access_key, nonce, timestamp, sign)
+        headers = _headers(self._access_key, nonce, timestamp, sign, "application/json;charset=UTF-8")
         url = self._base + path
         async with self._session.put(url, json=body, headers=headers) as resp:
             resp.raise_for_status()
             data = await resp.json()
         if data.get("code") != "0":
-            raise EcoFlowApiError(f"API error: {data.get('message', data)}")
+            raise EcoFlowApiError(f"API error for {path} (DEBUG_BODY: {body}): {data.get('message', data)}")
         return data
 
     # ── Public API methods ────────────────────────────────────────────────────
@@ -144,9 +150,9 @@ class EcoFlowApiClient:
         data = await self._get("/iot-open/sign/device/quota/all", {"sn": sn})
         return data.get("data", {})
 
-    async def set_quota(self, sn: str, params: dict) -> None:
+    async def set_quota(self, sn: str, command: dict) -> None:
         """Set one or more device quota values."""
-        body = {"sn": sn, "params": params}
+        body = {**command, "sn": sn}
         await self._put("/iot-open/sign/device/quota", body)
 
     async def get_mqtt_cert(self) -> dict:

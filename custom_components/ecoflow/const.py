@@ -1,4 +1,5 @@
 """Constants for the EcoFlow integration."""
+# VERSION 1.1
 
 DOMAIN = "ecoflow"
 MANUFACTURER = "EcoFlow"
@@ -222,29 +223,62 @@ DEVICE_BINARY_SENSORS = {
 # (quota_key, name, icon, set_params_fn)
 # set_params_fn(value: bool) → dict to send as params
 
-def _delta_pro_ac_switch(enabled: bool) -> dict:
-    return {"cmdSet": 32, "id": 66, "enabled": 1 if enabled else 0}
+# Group A: Older Portable Stations (Delta Pro, etc.)
+def _portable_ac_switch_v1(enabled: bool, sn: str | None = None) -> dict:
+    return {"params": {"cmdSet": 32, "id": 66, "enabled": 1 if enabled else 0}}
 
-def _delta_pro_car_switch(enabled: bool) -> dict:
-    return {"cmdSet": 32, "id": 81, "enabled": 1 if enabled else 0}
+def _portable_car_switch_v1(enabled: bool, sn: str | None = None) -> dict:
+    return {"params": {"cmdSet": 32, "id": 81, "enabled": 1 if enabled else 0}}
 
-def _powerstream_inv_switch(enabled: bool) -> dict:
-    return {"cmdCode": "WN511_SET_SUPPLY_PRIORITY_PACK", "supplyPriority": 0 if enabled else 1}
+# Group B: Newer Portable Stations (Delta 2, River 2 Pro) - Uses MPPT module for AC
+def _portable_ac_switch_v2(enabled: bool, sn: str | None = None) -> dict:
+    return {"id": 123456789, "version": "1.0", "moduleType": 5, "operateType": "acOutCfg",
+            "params": {"enabled": 1 if enabled else 0, "out_voltage": 230, "out_freq": 1}}
 
-def _smart_plug_switch(enabled: bool) -> dict:
-    return {"cmdCode": "WN511_SOCKET_SET_PLUG_SWITCH_MESSAGE", "plugSwitch": 1 if enabled else 0}
+def _portable_car_switch_v2(enabled: bool, sn: str | None = None) -> dict:
+    return {"id": 123456789, "version": "1.0", "moduleType": 5, "operateType": "mpptCar",
+            "params": {"enabled": 1 if enabled else 0}}
 
-def _stream_ac1_switch(enabled: bool) -> dict:
-    return {"cmdId": 17, "cmdFunc": 254, "dirDest": 1, "dirSrc": 1, "dest": 2,
-            "needAck": True, "params": {"cfgRelay2Onoff": enabled}}
+# Group C: Delta 2 Max - Uses INV module for AC
+def _portable_ac_switch_v3(enabled: bool, sn: str | None = None) -> dict:
+    return {"id": 123456789, "version": "1.0", "moduleType": 3, "operateType": "acOutCfg",
+            "params": {"enabled": 1 if enabled else 0, "out_voltage": 230, "out_freq": 1}}
 
-def _stream_ac2_switch(enabled: bool) -> dict:
-    return {"cmdId": 17, "cmdFunc": 254, "dirDest": 1, "dirSrc": 1, "dest": 2,
-            "needAck": True, "params": {"cfgRelay3Onoff": enabled}}
+# Group D: Micro-inverters / Smart Plugs
+def _powerstream_inv_switch(enabled: bool, sn: str | None = None) -> dict:
+    return {"cmdCode": "WN511_SET_SUPPLY_PRIORITY_PACK", "params": {"supplyPriority": 0 if enabled else 1}}
+
+def _smart_plug_switch(enabled: bool, sn: str | None = None) -> dict:
+    return {"cmdCode": "WN511_SOCKET_SET_PLUG_SWITCH_MESSAGE", "params": {"plugSwitch": 1 if enabled else 0}}
+
+# Group E: STREAM (BKW)
+def _stream_ac1_switch(enabled: bool, sn: str | None = None) -> dict:
+    res = {"cmdId": 17, "cmdFunc": 254, "dirDest": 1, "dirSrc": 1, "dest": 2,
+           "needAck": True, "params": {"cfgRelay2Onoff": enabled}}
+    if sn:
+        res["sn"] = sn
+    return res
+
+def _stream_ac2_switch(enabled: bool, sn: str | None = None) -> dict:
+    res = {"cmdId": 17, "cmdFunc": 254, "dirDest": 1, "dirSrc": 1, "dest": 2,
+           "needAck": True, "params": {"cfgRelay3Onoff": enabled}}
+    if sn:
+        res["sn"] = sn
+    return res
 
 SWITCHES_DELTA_PRO = [
-    ("inv.cfgAcEnabled", "AC Output", "mdi:power-plug", _delta_pro_ac_switch),
-    ("mppt.carState", "Car Charger Output", "mdi:car", _delta_pro_car_switch),
+    ("inv.cfgAcEnabled", "AC Output", "mdi:power-plug", _portable_ac_switch_v1),
+    ("mppt.carState", "Car Charger Output", "mdi:car", _portable_car_switch_v1),
+]
+
+SWITCHES_DELTA_2 = [
+    ("mppt.cfgAcEnabled", "AC Output", "mdi:power-plug", _portable_ac_switch_v2),
+    ("mppt.carState", "Car Charger Output", "mdi:car", _portable_car_switch_v2),
+]
+
+SWITCHES_DELTA_2_MAX = [
+    ("inv.cfgAcEnabled", "AC Output", "mdi:power-plug", _portable_ac_switch_v3),
+    ("mppt.carState", "Car Charger Output", "mdi:car", _portable_car_switch_v2),
 ]
 
 SWITCHES_STREAM = [
@@ -258,11 +292,11 @@ SWITCHES_SMART_PLUG = [
 
 DEVICE_SWITCHES = {
     DEVICE_DELTA_PRO: SWITCHES_DELTA_PRO,
-    DEVICE_DELTA_2: SWITCHES_DELTA_PRO,
-    DEVICE_DELTA_2_MAX: SWITCHES_DELTA_PRO,
+    DEVICE_DELTA_2: SWITCHES_DELTA_2,
+    DEVICE_DELTA_2_MAX: SWITCHES_DELTA_2_MAX,
     DEVICE_STREAM: SWITCHES_STREAM,
     DEVICE_SMART_PLUG: SWITCHES_SMART_PLUG,
-    DEVICE_RIVER_2_PRO: SWITCHES_DELTA_PRO,
+    DEVICE_RIVER_2_PRO: SWITCHES_DELTA_2,
     DEVICE_POWERSTREAM: [],
     DEVICE_POWEROCEAN: [],
     DEVICE_SMART_METER: [],
@@ -272,28 +306,46 @@ DEVICE_SWITCHES = {
 # ─── Number (slider) definitions ────────────────────────────────────────────
 # (quota_key, name, unit, min_val, max_val, step, icon, set_params_fn)
 
-def _delta_pro_charge_limit(value: int) -> dict:
-    return {"cmdSet": 32, "id": 49, "maxChgSoc": value}
+# Group A: Delta Pro, etc.
+def _portable_charge_limit_v1(value: int, sn: str | None = None) -> dict:
+    return {"params": {"cmdSet": 32, "id": 49, "maxChgSoc": value}}
 
-def _delta_pro_discharge_limit(value: int) -> dict:
-    return {"cmdSet": 32, "id": 51, "minDsgSoc": value}
+def _portable_discharge_limit_v1(value: int, sn: str | None = None) -> dict:
+    return {"params": {"cmdSet": 32, "id": 51, "minDsgSoc": value}}
 
-def _powerstream_lower_limit(value: int) -> dict:
-    return {"cmdCode": "WN511_SET_BAT_LOWER_PACK", "lowerLimit": value}
+# Group B: Newer Stations (Delta 2, Max, River 2 Pro) - Uses BMS module
+def _portable_charge_limit_v2(value: int, sn: str | None = None) -> dict:
+    return {"id": 123456789, "version": "1.0", "moduleType": 2, "operateType": "upsConfig",
+            "params": {"maxChgSoc": value}}
 
-def _powerstream_upper_limit(value: int) -> dict:
-    return {"cmdCode": "WN511_SET_BAT_UPPER_PACK", "upperLimit": value}
+def _portable_discharge_limit_v2(value: int, sn: str | None = None) -> dict:
+    return {"id": 123456789, "version": "1.0", "moduleType": 2, "operateType": "dsgCfg",
+            "params": {"minDsgSoc": value}}
 
-def _powerstream_perm_watts(value: int) -> dict:
-    return {"cmdCode": "WN511_SET_PERMANENT_WATTS_PACK", "permanentWatts": value}
+def _powerstream_lower_limit(value: int, sn: str | None = None) -> dict:
+    return {"cmdCode": "WN511_SET_BAT_LOWER_PACK", "params": {"lowerLimit": value}}
 
-def _stream_backup_soc(value: int) -> dict:
-    return {"cmdId": 17, "cmdFunc": 254, "dirDest": 1, "dirSrc": 1, "dest": 2,
-            "needAck": True, "params": {"cfgBackupReverseSoc": value}}
+def _powerstream_upper_limit(value: int, sn: str | None = None) -> dict:
+    return {"cmdCode": "WN511_SET_BAT_UPPER_PACK", "params": {"upperLimit": value}}
+
+def _powerstream_perm_watts(value: int, sn: str | None = None) -> dict:
+    return {"cmdCode": "WN511_SET_PERMANENT_WATTS_PACK", "params": {"permanentWatts": value}}
+
+def _stream_backup_soc(value: int, sn: str | None = None) -> dict:
+    res = {"cmdId": 17, "cmdFunc": 254, "dirDest": 1, "dirSrc": 1, "dest": 2,
+           "needAck": True, "params": {"cfgBackupReverseSoc": value}}
+    if sn:
+        res["sn"] = sn
+    return res
 
 NUMBERS_DELTA_PRO = [
-    ("ems.maxChargeSoc", "Charge Limit", "%", 50, 100, 1, "mdi:battery-charging-high", _delta_pro_charge_limit),
-    ("ems.minDsgSoc", "Discharge Limit", "%", 0, 30, 1, "mdi:battery-arrow-down", _delta_pro_discharge_limit),
+    ("ems.maxChargeSoc", "Charge Limit", "%", 50, 100, 1, "mdi:battery-charging-high", _portable_charge_limit_v1),
+    ("ems.minDsgSoc", "Discharge Limit", "%", 0, 30, 1, "mdi:battery-arrow-down", _portable_discharge_limit_v1),
+]
+
+NUMBERS_DELTA_2 = [
+    ("bms_emsStatus.maxChargeSoc", "Charge Limit", "%", 50, 100, 1, "mdi:battery-charging-high", _portable_charge_limit_v2),
+    ("bms_emsStatus.minDsgSoc", "Discharge Limit", "%", 0, 30, 1, "mdi:battery-arrow-down", _portable_discharge_limit_v2),
 ]
 
 NUMBERS_POWERSTREAM = [
@@ -308,12 +360,12 @@ NUMBERS_STREAM = [
 
 DEVICE_NUMBERS = {
     DEVICE_DELTA_PRO: NUMBERS_DELTA_PRO,
-    DEVICE_DELTA_2: NUMBERS_DELTA_PRO,
-    DEVICE_DELTA_2_MAX: NUMBERS_DELTA_PRO,
+    DEVICE_DELTA_2: NUMBERS_DELTA_2,
+    DEVICE_DELTA_2_MAX: NUMBERS_DELTA_2,
     DEVICE_STREAM: NUMBERS_STREAM,
-    DEVICE_POWERSTREAM: NUMBERS_POWERSTREAM,
     DEVICE_SMART_PLUG: [],
-    DEVICE_RIVER_2_PRO: NUMBERS_DELTA_PRO,
+    DEVICE_RIVER_2_PRO: NUMBERS_DELTA_2,
+    DEVICE_POWERSTREAM: NUMBERS_POWERSTREAM,
     DEVICE_POWEROCEAN: [],
     DEVICE_SMART_METER: [],
     DEVICE_UNKNOWN: [],
