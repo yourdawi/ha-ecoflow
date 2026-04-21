@@ -20,19 +20,17 @@ def _build_sign(params: dict, access_key: str, secret_key: str) -> tuple[str, st
     nonce = str(random.randint(100000, 999999))
     timestamp = str(int(time.time() * 1000))
 
-    # Step 1+2: flatten params dict to sorted key=value pairs
+    # All parameters (including auth fields) must be flattened and sorted together
     flat: list[str] = []
     _flatten(params, "", flat)
-    flat.sort()
-
-    # Step 3: append auth fields
     flat.append(f"accessKey={access_key}")
     flat.append(f"nonce={nonce}")
     flat.append(f"timestamp={timestamp}")
+    flat.sort()
 
     query_str = "&".join(flat)
 
-    # Step 4+5: HMAC-SHA256 → hex
+    # HMAC-SHA256 → hex
     sign = hmac.new(
         secret_key.encode("utf-8"),
         query_str.encode("utf-8"),
@@ -43,7 +41,7 @@ def _build_sign(params: dict, access_key: str, secret_key: str) -> tuple[str, st
 
 
 def _flatten(obj: Any, prefix: str, result: list[str]) -> None:
-    """Recursively flatten a dict to param=value strings."""
+    """Recursively flatten a dict to param=value strings using JSON-like representation."""
     if isinstance(obj, dict):
         for k, v in obj.items():
             new_key = f"{prefix}.{k}" if prefix else k
@@ -53,7 +51,16 @@ def _flatten(obj: Any, prefix: str, result: list[str]) -> None:
             new_key = f"{prefix}[{i}]"
             _flatten(v, new_key, result)
     else:
-        result.append(f"{prefix}={obj}")
+        # Convert values to JSON-compatible strings
+        if obj is True:
+            val = "true"
+        elif obj is False:
+            val = "false"
+        elif obj is None:
+            val = "null"
+        else:
+            val = str(obj)
+        result.append(f"{prefix}={val}")
 
 
 def _headers(access_key: str, nonce: str, timestamp: str, sign: str) -> dict:
@@ -90,12 +97,7 @@ class EcoFlowApiClient:
     async def _get(self, path: str, query: dict | None = None) -> dict:
         params = query or {}
         nonce, timestamp, sign, _ = _build_sign(params, self._access_key, self._secret_key)
-        headers = {
-            "accessKey": self._access_key,
-            "nonce": nonce,
-            "timestamp": timestamp,
-            "sign": sign,
-        }
+        headers = _headers(self._access_key, nonce, timestamp, sign)
         url = self._base + path
         async with self._session.get(url, params=params, headers=headers) as resp:
             resp.raise_for_status()
