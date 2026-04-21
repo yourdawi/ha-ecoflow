@@ -16,6 +16,7 @@ from .const import (
     API_HOSTS,
     API_REGION_CUSTOM,
     API_REGION_EU,
+    API_REGION_US,
     CONF_ACCESS_KEY,
     CONF_API_HOST,
     CONF_REGION,

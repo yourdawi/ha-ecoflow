@@ -13,6 +13,8 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from .api import EcoFlowApiClient, EcoFlowApiError
 from .const import (
     API_HOSTS,
+    API_REGION_EU,
+    API_REGION_US,
     CONF_ACCESS_KEY,
     CONF_API_HOST,
     CONF_SECRET_KEY,
